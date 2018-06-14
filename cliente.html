@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Aplicación CHAT en Node.js</title>
+    <script src="//code.jquery.com/jquery-1.12.0.min.js"></script>
+    <!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+
+<!-- Optional theme -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+
+<style>
+        #seccionPrincipal {
+            display: none;
+        }
+        
+        #seccionChat {
+            float: left;
+            padding: 10px;
+        }
+        
+        #ventanaChat {
+            height: 400px;
+        }
+        
+        #seccionUsuarios {
+            float: left;
+            padding: 10px;
+            margin-left: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>CHAT ROOM</h2>
+        
+        <div id="seccionUsuario" class="jumbotron">
+            <p>Escriba un nombre de usuario:</p>
+            <div id="error" class="alert alert-warning" style="display:none;"></div>
+            <form id="formularioUsuario">
+                <div class="input-group">
+                    <input id="usuario" class="form-control" placeholder="Nombre del Usuario">
+                    <span class="input-group-btn">
+                        <button class="btn btn-primary" type="submit">Enviar</button>
+                    </span>
+                </div>
+            </form>
+        </div>
+        
+        <div id="seccionPrincipal">
+            <div id="seccionChat" class="jumbotron col-xs-10">
+                <div id="ventanaChat"></div>
+                <form id="formularioChat">
+                    <div class="input-group">
+                        <input id="mensaje" class="form-control">
+                        <span class="input-group-btn">
+                            <button class="btn btn-primary" type="button">Enviar</button>
+                        </span>
+                    </div>
+                </form>
+            </div>
+            <div id="seccionUsuarios" class="jumbotron">
+                <h4>Usuarios</h4>
+                <div id="listaUsuarios"></div>
+            </div>
+        </div>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+    $(function(){
+        var socket = io.connect();
+        
+        var formularioUsuario = $("#formularioUsuario");
+        var formularioChat = $("#formularioChat");
+        
+        var usuario = $("#usuario");
+        var listaUsuarios = $("#listaUsuarios");
+        
+        var mensaje = $("#mensaje");
+        var chat = $("#ventanaChat");
+        
+        formularioUsuario.submit(function(evento){
+            evento.preventDefault();
+            socket.emit('nuevo usuario', usuario.val(), function(data){
+                if(data){
+                    $('#error').hide();
+                    $('#seccionUsuario').hide();
+                    $('#seccionPrincipal').show();
+                }
+                else{
+                    $('#error').html('El nombre del usuario ya exite');
+                    $('#error').show();
+                }
+            });
+            usuario.val('');
+            
+            socket.on('actualizarUsuarios', function(usuarios){
+                var html = '';
+                
+                usuarios.forEach(function(usuario){
+                    html += usuario + '<br />';
+                });
+                
+                listaUsuarios.html(html);
+            });
+            
+            formularioChat.submit(function(evento){
+                evento.preventDefault();
+                socket.emit('nuevo mensaje', mensaje.val());
+                mensaje.val('');
+            });
+            
+            socket.on('mensaje', function(data){
+                chat.append('<strong>' + data.usuario + '</strong> - ' + data.mensaje + '<br/>');
+            })
+        })
+    })
+    
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
